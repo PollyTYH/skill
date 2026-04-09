@@ -34,7 +34,6 @@ from lib_agent import (
 )
 from lib_grading import GradeResult, grade_task
 from lib_tasks import Task, TaskLoader
-from lib_trend import RunTrendAnalyzer
 
 
 # Configure logging
