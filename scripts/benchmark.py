@@ -34,6 +34,7 @@ from lib_agent import (
 )
 from lib_grading import GradeResult, grade_task
 from lib_tasks import Task, TaskLoader
+from lib_trend import RunTrendAnalyzer
 
 
 # Configure logging
@@ -252,16 +253,27 @@ def _parse_args() -> argparse.Namespace:
         help="Continue running all tasks even if sanity check scores 0%%",
     )
     parser.add_argument(
+        "--trend",
+        action="store_true",
+        help="Run trend analysis after benchmark completes (requires ≥2 runs in output dir)",
+    )
+    parser.add_argument(
         "--trend-window",
         type=int,
-        default=None,
+        default=10,
         metavar="N",
-        help="Analyze score trends over the last N runs after benchmarking (requires ≥2 runs)",
+        help="Number of recent runs to include in trend analysis (default: 10)",
+    )
+    parser.add_argument(
+        "--trend-threshold",
+        type=float,
+        default=-0.5,
+        help="Slope (%/run) below which regression is flagged (default: -0.5)",
     )
     args = parser.parse_args()
 
     # Validate --trend-window
-    if args.trend_window is not None and args.trend_window < 2:
+    if args.trend_window < 2:
         parser.error("--trend-window must be >= 2")
 
     return args
@@ -846,13 +858,14 @@ def main():
     _log_category_summary(task_entries, tasks_by_id)
     _log_efficiency_summary(efficiency, grades_by_task_id)
     # Run trend analysis if requested
-    if args.trend_window is not None:
+    if args.trend:
         try:
             from lib_trend import RunTrendAnalyzer
 
             analyzer = RunTrendAnalyzer(
                 results_dir=output_dir,
                 window=args.trend_window,
+                regression_threshold=args.trend_threshold,
             )
             analyzer.run(model=args.model)
         except Exception as exc:
