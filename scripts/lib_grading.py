@@ -280,7 +280,7 @@ def _grade_llm_judge(
 
             raw_parsed = _parse_judge_response(judge_result.get("transcript", []))
 
-        break  # Success — no retry needed
+        break  # Parsed response; exit loop after success or after the final failed attempt
 
     if verbose:
         logger.info("   [VERBOSE] Judge raw response parsed: %s", raw_parsed)
